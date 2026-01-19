@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activity Check-in</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <h1>เช็คอินเข้าร่วมกิจกรรม</h1>
+    <button id="btnCheckin" onclick="getLocation()">กดเพื่อเช็คอิน</button>
+    <p id="status"></p>
+
+    <script>
+        const LIFF_ID = '2008925313-hrsUUpmB';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec';
+
+        async function main() {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            }
+        }
+        main();
+
+        function getLocation() {
+            document.getElementById('status').innerText = "กำลังตรวจสอบพิกัด...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const profile = await liff.getProfile();
+                const payload = {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                };
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    alert(result.message);
+                    if(result.status === 'success') liff.closeWindow();
+                });
+            }, (err) => {
+                alert("กรุณาอนุญาตการเข้าถึงตำแหน่ง (GPS)");
+            });
+        }
+    </script>
+</body>
+</html>
