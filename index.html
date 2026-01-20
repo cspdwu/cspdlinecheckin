@@ -1,100 +1,103 @@
-<script>
-    const LIFF_ID = '2008925313-hrsUUpmB';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec';
-    let userId = '';
-    let userData = null; // เพิ่มตัวแปรสำหรับเก็บข้อมูลนักศึกษาที่โหลดมาได้
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSPD Check-in</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; text-align: center; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .hidden { display: none; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #00b900; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #loading { margin-top: 50px; color: #666; }
+    </style>
+</head>
+<body>
+    <div id="loading">กำลังเตรียมความพร้อม...</div>
+    <div id="mainApp" class="container hidden">
+        <div id="regForm" class="hidden">
+            <h2>ลงทะเบียน</h2>
+            <input type="number" id="studentId" placeholder="รหัสนักศึกษา 8 หลัก">
+            <input type="text" id="fullName" placeholder="ชื่อ-นามสกุล">
+            <select id="school">
+                <option value="">เลือกสำนักวิชา</option>
+                <option value="สำนักวิชาสารสนเทศศาสตร์">สำนักวิชาสารสนเทศศาสตร์</option>
+                <option value="สำนักวิชาวิศวกรรมศาสตร์">สำนักวิชาวิศวกรรมศาสตร์</option>
+            </select>
+            <button onclick="register()">บันทึกข้อมูล</button>
+        </div>
+        <div id="checkinArea" class="hidden">
+            <h3 id="displayName"></h3>
+            <p id="displayId"></p>
+            <button id="btnCheckin" onclick="handleCheckIn()">กดเพื่อเช็คอิน</button>
+        </div>
+    </div>
 
-    async function main() {
-        try {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) {
-                liff.login();
-                return;
+    <script>
+        const LIFF_ID = '2008925313-hrsUUpmB';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec';
+        let userId = '', userData = null;
+
+        async function main() {
+            try {
+                // ย้าย liff.init มาไว้ใน try-catch เพื่อดูสาเหตุ Error
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) { liff.login(); return; }
+                const profile = await liff.getProfile();
+                userId = profile.userId;
+                checkStatus();
+            } catch (err) {
+                document.getElementById('loading').innerText = "เกิดข้อผิดพลาดในการโหลด LIFF: " + err.message;
             }
-            const profile = await liff.getProfile();
-            userId = profile.userId;
-            checkUserStatus();
-        } catch (err) {
-            console.error(err);
-            alert('LIFF Initialization failed');
-        }
-    }
-
-    async function checkUserStatus() {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'checkStatus', userId: userId })
-        });
-        const result = await response.json();
-        
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-
-        if (result.registered) {
-            userData = result.userData; // เก็บข้อมูลไว้ใช้ตอนเช็คอิน
-            document.getElementById('checkinArea').classList.remove('hidden');
-            document.getElementById('dispName').innerText = userData.fullName;
-            document.getElementById('dispId').innerText = userData.studentId;
-        } else {
-            document.getElementById('regForm').classList.remove('hidden');
-        }
-    }
-
-    async function register() {
-        const studentId = document.getElementById('studentId').value;
-        const fullName = document.getElementById('fullName').value;
-        const school = document.getElementById('school').value;
-
-        if (studentId.length !== 8 || !fullName || !school) {
-            alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง (รหัสต้องมี 8 หลัก)');
-            return;
         }
 
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('loading').innerText = 'กำลังบันทึกการลงทะเบียน...';
-        document.getElementById('loading').classList.remove('hidden');
-
-        // ส่งข้อมูลลงทะเบียนไปที่ GAS เพื่อบันทึกลง Firebase
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'register', userId, studentId, fullName, school })
-        });
-
-        alert('ลงทะเบียนสำเร็จ!');
-        location.reload();
-    }
-
-    function handleCheckIn() {
-        const btn = document.getElementById('btnCheckin');
-        btn.disabled = true;
-        btn.innerText = 'กำลังตรวจสอบตำแหน่ง...';
-
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'checkin',
-                    userId: userId,
-                    studentId: userData.studentId, // ส่งข้อมูลที่เก็บไว้ไปด้วย
-                    fullName: userData.fullName,     // ส่งข้อมูลที่เก็บไว้ไปด้วย
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                })
-            });
-            const result = await response.json();
-            alert(result.message);
-            if (result.status === 'success') {
-                liff.closeWindow();
+        async function checkStatus() {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'checkStatus', userId }) });
+            const data = await res.json();
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            if (data.registered) {
+                userData = data.userData;
+                document.getElementById('checkinArea').classList.remove('hidden');
+                document.getElementById('displayName').innerText = userData.fullName;
+                document.getElementById('displayId').innerText = "รหัส: " + userData.studentId;
             } else {
-                btn.disabled = false;
-                btn.innerText = 'กดเพื่อเช็คอิน';
+                document.getElementById('regForm').classList.remove('hidden');
             }
-        }, (err) => {
-            alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง');
-            btn.disabled = false;
-            btn.innerText = 'กดเพื่อเช็คอิน';
-        }, { enableHighAccuracy: true });
-    }
+        }
 
-    main();
-</script>
+        async function register() {
+            const studentId = document.getElementById('studentId').value;
+            const fullName = document.getElementById('fullName').value;
+            const school = document.getElementById('school').value;
+            if (studentId.length !== 8 || !fullName || !school) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId, studentId, fullName, school }) });
+            location.reload();
+        }
+
+        function handleCheckIn() {
+            const btn = document.getElementById('btnCheckin');
+            btn.disabled = true; btn.innerText = "กำลังตรวจสอบพิกัด...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'checkin', userId, studentId: userData.studentId, fullName: userData.fullName, lat: pos.coords.latitude, lng: pos.coords.longitude })
+                });
+                const result = await res.json();
+                alert(result.message);
+                if (result.status === 'success') liff.closeWindow();
+                else { btn.disabled = false; btn.innerText = "กดเพื่อเช็คอิน"; }
+            }, (err) => {
+                alert("กรุณาเปิด GPS");
+                btn.disabled = false;
+            }, { enableHighAccuracy: true });
+        }
+        main();
+    </script>
+</body>
+</html>
