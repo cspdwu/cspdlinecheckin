@@ -1,36 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Check-in</title>
+    <title>ระบบเช็คอินกิจกรรมนักศึกษา</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
+        h2 { color: #00b900; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background-color: #00b900; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        button:hover { background-color: #009900; }
+        #loading { font-size: 18px; color: #666; margin-top: 50px; }
         .hidden { display: none; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { background: #00b900; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; width: 100%; }
+        .info-box { background: #e9f7ef; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; }
     </style>
 </head>
 <body>
-    <div id="loading">กำลังโหลดข้อมูล...</div>
 
-    <div id="regForm" class="hidden">
-        <h2>ลงทะเบียนครั้งแรก</h2>
-        <input type="number" id="studentId" placeholder="รหัสนักศึกษา 8 หลัก" required>
-        <input type="text" id="fullName" placeholder="ชื่อ-นามสกุล" required>
-        <select id="school">
-            <option value="">เลือกสำนักวิชา</option>
-            <option value="IT">สำนักวิชาสารสนเทศศาสตร์</option>
-            <option value="Eng">สำนักวิชาวิศวกรรมศาสตร์</option>
+    <div id="loading">กำลังเชื่อมต่อระบบ...</div>
+
+    <div id="mainApp" class="container hidden">
+        <div id="regForm" class="hidden">
+            <h2>ลงทะเบียนนักศึกษา</h2>
+            <p>กรุณาลงทะเบียนเพื่อใช้งานระบบครั้งแรก</p>
+            <input type="number" id="studentId" placeholder="รหัสนักศึกษา 8 หลัก" pattern="\d{8}">
+            <input type="text" id="fullName" placeholder="ชื่อ-นามสกุล">
+            <select id="school">
+                <option value="">เลือกสำนักวิชา</option>
+                <option value="สำนักวิชาสารสนเทศศาสตร์">สำนักวิชาสารสนเทศศาสตร์</option>
+                <option value="สำนักวิชาวิศวกรรมศาสตร์">สำนักวิชาวิศวกรรมศาสตร์</option>
+                <option value="สำนักวิชาการจัดการ">สำนักวิชาการจัดการ</option>
+                <option value="สำนักวิชาพยาบาลศาสตร์">สำนักวิชาพยาบาลศาสตร์</option>
             </select>
-        <button onclick="register()">ลงทะเบียน</button>
-    </div>
+            <button onclick="register()">ลงทะเบียน</button>
+        </div>
 
-    <div id="checkinArea" class="hidden">
-        <h2>สวัสดีคุณ <span id="userName"></span></h2>
-        <p>รหัสนักศึกษา: <span id="userCode"></span></p>
-        <button onclick="checkIn()">กดเพื่อเช็คอินเข้ากิจกรรม</button>
+        <div id="checkinArea" class="hidden">
+            <h2>เช็คอินกิจกรรม</h2>
+            <div class="info-box">
+                <strong>ชื่อ:</strong> <span id="dispName"></span><br>
+                <strong>รหัส:</strong> <span id="dispId"></span>
+            </div>
+            <p>กรุณายืนยันตำแหน่งเพื่อเช็คอิน</p>
+            <button id="btnCheckin" onclick="handleCheckIn()">กดเพื่อเช็คอิน</button>
+        </div>
     </div>
 
     <script>
@@ -39,26 +54,35 @@
         let userId = '';
 
         async function main() {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) { liff.login(); return; }
-            
-            const profile = await liff.getProfile();
-            userId = profile.userId;
-            checkStatus();
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+                const profile = await liff.getProfile();
+                userId = profile.userId;
+                checkUserStatus();
+            } catch (err) {
+                console.error(err);
+                alert('LIFF Initialization failed');
+            }
         }
 
-        async function checkStatus() {
-            const res = await fetch(SCRIPT_URL, {
+        async function checkUserStatus() {
+            const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'checkStatus', userId: userId })
             });
-            const data = await res.json();
-            document.getElementById('loading').classList.add('hidden');
+            const result = await response.json();
             
-            if (data.registered) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            if (result.registered) {
                 document.getElementById('checkinArea').classList.remove('hidden');
-                document.getElementById('userName').innerText = data.userData.fullName;
-                document.getElementById('userCode').innerText = data.userData.studentId;
+                document.getElementById('dispName').innerText = result.userData.fullName;
+                document.getElementById('dispId').innerText = result.userData.studentId;
             } else {
                 document.getElementById('regForm').classList.remove('hidden');
             }
@@ -69,19 +93,31 @@
             const fullName = document.getElementById('fullName').value;
             const school = document.getElementById('school').value;
 
-            if (studentId.length !== 8) return alert("รหัสนักศึกษาต้องมี 8 หลัก");
-            
+            if (studentId.length !== 8 || !fullName || !school) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง (รหัสต้องมี 8 หลัก)');
+                return;
+            }
+
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loading').innerText = 'กำลังบันทึกข้อมูล...';
+            document.getElementById('loading').classList.remove('hidden');
+
             await fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'register', userId: userId, studentId, fullName, school })
+                body: JSON.stringify({ action: 'register', userId, studentId, fullName, school })
             });
-            alert("ลงทะเบียนสำเร็จ!");
+
+            alert('ลงทะเบียนสำเร็จ!');
             location.reload();
         }
 
-        function checkIn() {
+        function handleCheckIn() {
+            const btn = document.getElementById('btnCheckin');
+            btn.disabled = true;
+            btn.innerText = 'กำลังตรวจสอบตำแหน่ง...';
+
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const res = await fetch(SCRIPT_URL, {
+                const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'checkin',
@@ -90,11 +126,21 @@
                         lng: pos.coords.longitude
                     })
                 });
-                const result = await res.json();
+                const result = await response.json();
                 alert(result.message);
-                if (result.status === 'success') liff.closeWindow();
-            });
+                if (result.status === 'success') {
+                    liff.closeWindow();
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = 'กดเพื่อเช็คอิน';
+                }
+            }, (err) => {
+                alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง');
+                btn.disabled = false;
+                btn.innerText = 'กดเพื่อเช็คอิน';
+            }, { enableHighAccuracy: true });
         }
+
         main();
     </script>
 </body>
