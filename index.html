@@ -96,7 +96,7 @@
         <div id="successArea" class="hidden" style="text-align: center;">
             <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ</h2>
             <div class="info-box" style="border-left-color: #008CBA; background-color: #e6f2ff; margin-bottom: 25px;">
-                กรุณาทำแบบประเมิน<br>
+                คลิกทำแบบประเมินเพื่อรับคะแนนความดี<br>
                 <a href="https://forms.gle/biY5zSiC6aCe3qK87" target="_blank" style="color: #0056b3; font-weight: bold; word-break: break-all; text-decoration: none;">https://forms.gle/biY5zSiC6aCe3qK87</a>
             </div>
             <button onclick="window.location.href='https://forms.gle/biY5zSiC6aCe3qK87'" style="background-color: #008CBA;">กดเพื่อทำแบบประเมิน</button>
@@ -243,7 +243,7 @@
                 body: JSON.stringify({ action: 'register', userId, studentId, fullName, school })
             });
 
-            alert('ลงทะเบียนสำเร็จ!');
+            alert('ลงทะเบียนผูกบัญชี Line สำเร็จ! กรุณารอหน้าเช็คอิน');
             location.reload();
         }
 
