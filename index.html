@@ -4,31 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบเช็คอินกิจกรรม</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script> [cite: 1]
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; box-sizing: border-box; }
-        h2 { color: #00b900; margin: 0 0 5px 0; font-size: 24px; }
-        h3 { color: #555; margin: 0 0 25px 0; font-size: 18px; font-weight: normal; }
-        .label { text-align: left; display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #666; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
-        input:focus, select:focus { border-color: #00b900; box-shadow: 0 0 5px rgba(0,185,0,0.2); }
-        .warning-text { color: #d9534f; font-size: 13px; margin-bottom: 20px; background: #fff5f5; padding: 10px; border-radius: 8px; border-left: 4px solid #d9534f; line-height: 1.5; }
-        button { width: 100%; padding: 15px; background-color: #00b900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #009900; transform: translateY(-2px); }
-        .info-box { background: #e9f7ef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 4px solid #00b900; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; } [cite: 1, 2, 3]
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; box-sizing: border-box; } [cite: 3, 4, 5]
+        h2 { color: #00b900; margin: 0 0 5px 0; font-size: 24px; } [cite: 5, 6]
+        h3 { color: #555; margin: 0 0 25px 0; font-size: 18px; font-weight: normal; } [cite: 6, 7]
+        .label { text-align: left; display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #666; } [cite: 7, 8]
+        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; } [cite: 8, 9, 10]
+        input:focus, select:focus { border-color: #00b900; box-shadow: 0 0 5px rgba(0,185,0,0.2); } [cite: 10, 11]
+        .warning-text { color: #d9534f; font-size: 13px; margin-bottom: 20px; background: #fff5f5; padding: 10px; border-radius: 8px; border-left: 4px solid #d9534f; line-height: 1.5; } [cite: 11, 12]
+        button { width: 100%; padding: 15px; background-color: #00b900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; } [cite: 12, 13, 14]
+        button:hover { background-color: #009900; transform: translateY(-2px); } [cite: 14, 15]
+        button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+        .info-box { background: #e9f7ef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 4px solid #00b900; } [cite: 15, 16]
         
         /* Modal Styles */
-        #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; text-align: left; }
-        .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-body p { margin: 10px 0; line-height: 1.6; }
-        .modal-footer { margin-top: 25px; display: flex; gap: 10px; }
-        .btn-confirm { background: #00b900; flex: 2; }
-        .btn-cancel { background: #999; flex: 1; }
+        #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; } [cite: 16, 17, 18]
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; text-align: left; } [cite: 18, 19]
+        .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; } [cite: 19, 20]
+        .modal-body p { margin: 10px 0; line-height: 1.6; } [cite: 20, 21]
+        .modal-footer { margin-top: 25px; display: flex; gap: 10px; } [cite: 21, 22]
+        .btn-confirm { background: #00b900; flex: 2; } [cite: 22, 23]
+        .btn-cancel { background: #999; flex: 1; } [cite: 23, 24]
         
-        #loading { font-size: 18px; color: #666; margin-top: 50px; }
-        .hidden { display: none; }
+        #loading { font-size: 18px; color: #666; margin-top: 50px; } [cite: 24, 25]
+        .hidden { display: none; } [cite: 25, 26]
     </style>
 </head>
 <body>
@@ -42,40 +43,40 @@
             <h3>กรุณาลงทะเบียน</h3>
             
             <span class="label">รหัสนักศึกษา (8 หลัก)</span>
-            <input type="text" id="studentId" placeholder="ตัวอย่าง 69XXXXXX" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)">
+            <input type="text" id="studentId" placeholder="ตัวอย่าง 69XXXXXX" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)"> [cite: 27]
             
             <span class="label">ชื่อ-นามสกุล</span>
             <input type="text" id="fullName" placeholder="คำนำหน้า ชื่อ นามสกุล">
             
             <span class="label">สำนักวิชา</span>
             <select id="school">
-                <option value="">เลือกสำนักวิชา</option>
+                <option value="">เลือกสำนักวิชา</option> [cite: 28]
                 <option value="การจัดการ">การจัดการ</option>
                 <option value="การบัญชีและการเงิน">การบัญชีและการเงิน</option>
                 <option value="เทคโนโลยีการเกษตรและอุตสาหกรรมอาหาร">เทคโนโลยีการเกษตรและอุตสาหกรรมอาหาร</option>
                 <option value="นิติศาสตร์">นิติศาสตร์</option>
                 <option value="พยาบาลศาสตร์">พยาบาลศาสตร์</option>
-                <option value="แพทยศาสตร์">แพทยศาสตร์</option>
+                <option value="แพทยศาสตร์">แพทยศาสตร์</option> [cite: 29]
                 <option value="เภสัชศาสตร์">เภสัชศาสตร์</option>
                 <option value="รัฐศาสตร์และรัฐประศาสนศาสตร์">รัฐศาสตร์และรัฐประศาสนศาสตร์</option>
                 <option value="วิทยาศาสตร์">วิทยาศาสตร์</option>
                 <option value="วิศวกรรมศาสตร์และเทคโนโลยี">วิศวกรรมศาสตร์และเทคโนโลยี</option>
                 <option value="ศึกษาศาสตร์">ศึกษาศาสตร์</option>
-                <option value="ศิลปศาสตร์">ศิลปศาสตร์</option>
+                <option value="ศิลปศาสตร์">ศิลปศาสตร์</option> [cite: 30]
                 <option value="สถาปัตยกรรมศาสตร์และการออกแบบ">สถาปัตยกรรมศาสตร์และการออกแบบ</option>
                 <option value="สหเวชศาสตร์">สหเวชศาสตร์</option>
                 <option value="สาธารณสุขศาสตร์">สาธารณสุขศาสตร์</option>
                 <option value="สารสนเทศศาสตร์">สารสนเทศศาสตร์</option>
                 <option value="วิทยาลัยทันตแพทยศาสตร์นานาชาติ">วิทยาลัยทันตแพทยศาสตร์นานาชาติ</option>
-                <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
+                <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option> [cite: 31]
                 <option value="วิทยาลัยสัตวแพทยศาสตร์อัครราชกุมารี">วิทยาลัยสัตวแพทยศาสตร์อัครราชกุมารี</option>
             </select>
 
             <div class="warning-text">
-                กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนบันทึกข้อมูล สามารถบันทึกข้อมูลได้เพียง 1 ครั้งต่อ 1 ID Line เท่านั้น
+                กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนบันทึกข้อมูล สามารถบันทึกข้อมูลได้เพียง 1 ครั้งต่อ 1 ID Line เท่านั้น [cite: 31, 32]
             </div>
             
-            <button onclick="showConfirmPopup()">บันทึกข้อมูล</button>
+            <button onclick="showConfirmPopup()">บันทึกข้อมูล</button> [cite: 32]
         </div>
 
         <div id="checkinArea" class="hidden">
@@ -83,16 +84,19 @@
             <h3>ศูนย์ส่งเสริมและพัฒนานักศึกษา</h3>
             <div class="info-box">
                 <strong>ชื่อ:</strong> <span id="dispName"></span><br>
-                <strong>รหัส:</strong> <span id="dispId"></span>
+                <strong>รหัส:</strong> <span id="dispId"></span> [cite: 33]
             </div>
+            
+            <div id="timeStatusArea"></div>
+
             <button id="btnCheckin" onclick="handleCheckIn()">กดเพื่อเช็คอินเข้ากิจกรรม</button>
         </div>
 
         <div id="successArea" class="hidden" style="text-align: center;">
-            <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ</h2>
-            <div class="info-box" style="border-left-color: #008CBA; background-color: #e6f2ff; margin-bottom: 25px;">
+            <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ</h2> [cite: 34]
+            <div class="info-box" style="border-left-color: #008CBA; background-color: #e6f2ff; margin-bottom: 25px;"> [cite: 35]
                 กรุณาทำแบบประเมิน<br>
-                <a href="https://forms.gle/biY5zSiC6aCe3qK87" target="_blank" style="color: #0056b3; font-weight: bold; word-break: break-all; text-decoration: none;">https://forms.gle/biY5zSiC6aCe3qK87</a>
+                <a href="https://forms.gle/biY5zSiC6aCe3qK87" target="_blank" style="color: #0056b3; font-weight: bold; word-break: break-all; text-decoration: none;">https://forms.gle/biY5zSiC6aCe3qK87</a> [cite: 36]
             </div>
             <button onclick="window.location.href='https://forms.gle/biY5zSiC6aCe3qK87'" style="background-color: #008CBA;">กดเพื่อทำแบบประเมิน</button>
         </div>
@@ -102,7 +106,7 @@
         <div class="modal-content">
             <div class="modal-header">ยืนยันข้อมูลการลงทะเบียน</div>
             <div class="modal-body" id="confirmDetails">
-                </div>
+            </div> [cite: 37]
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="hideConfirmPopup()">แก้ไข</button>
                 <button class="btn-confirm" onclick="confirmAndRegister()">ยืนยัน</button>
@@ -111,23 +115,64 @@
     </div>
 
     <script>
-        const LIFF_ID = '2008925313-hrsUUpmB';
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec';
+        const LIFF_ID = '2008925313-hrsUUpmB'; [cite: 38]
+        // กรุณาเปลี่ยนเป็น SCRIPT_URL ที่เพิ่ง Deploy ใหม่
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec'; 
         let userId = '';
-        let userData = null;
+        let userData = null; [cite: 39]
+        let eventConfig = null;
 
         async function main() {
             try {
-                await liff.init({ liffId: LIFF_ID });
+                await liff.init({ liffId: LIFF_ID }); [cite: 40]
                 if (!liff.isLoggedIn()) {
-                    liff.login();
+                    liff.login(); [cite: 41]
                     return;
                 }
-                const profile = await liff.getProfile();
+                const profile = await liff.getProfile(); [cite: 42]
                 userId = profile.userId;
+                
+                // โหลดการตั้งค่าเวลาพร้อมกับเช็คสถานะนักศึกษา
+                await fetchConfig();
                 checkUserStatus();
             } catch (err) {
-                alert('LIFF Initialization failed');
+                alert('LIFF Initialization failed'); [cite: 43]
+            }
+        }
+
+        // ดึงการตั้งค่าจาก Google Sheet
+        async function fetchConfig() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                eventConfig = await response.json();
+            } catch (err) {
+                console.error('Failed to load configuration');
+            }
+        }
+
+        // อัปเดต UI เปิด-ปิด การเช็คอินตามเวลา
+        function checkTimeAndLockUI() {
+            if (!eventConfig) return;
+            
+            const now = new Date();
+            const btn = document.getElementById('btnCheckin');
+            const timeStatus = document.getElementById('timeStatusArea');
+
+            let start = eventConfig.startTime ? new Date(eventConfig.startTime) : null;
+            let end = eventConfig.endTime ? new Date(eventConfig.endTime) : null;
+
+            if (start && now < start) {
+                btn.disabled = true;
+                btn.innerText = 'ยังไม่เปิดระบบ';
+                timeStatus.innerHTML = `<div class="warning-text" style="color:#856404; background:#FFF3CD; border-color:#856404;">ระบบจะเปิดให้เช็คอินเวลา: ${start.toLocaleString('th-TH')}</div>`;
+            } else if (end && now > end) {
+                btn.disabled = true;
+                btn.innerText = 'ระบบปิดแล้ว';
+                timeStatus.innerHTML = `<div class="warning-text">หมดเวลาเช็คอินแล้ว (ปิดเมื่อ ${end.toLocaleString('th-TH')})</div>`;
+            } else {
+                btn.disabled = false;
+                btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
+                timeStatus.innerHTML = ''; // เอาข้อความเตือนออก
             }
         }
 
@@ -135,33 +180,36 @@
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'checkStatus', userId: userId })
-            });
+            }); [cite: 44]
             const result = await response.json();
             
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
 
             if (result.registered) {
-                userData = result.userData;
+                userData = result.userData; [cite: 45]
                 document.getElementById('checkinArea').classList.remove('hidden');
                 document.getElementById('dispName').innerText = userData.fullName;
                 document.getElementById('dispId').innerText = userData.studentId;
+                
+                // ตรวจสอบเวลาเพื่อล็อคปุ่มทันทีที่โหลดเสร็จ
+                checkTimeAndLockUI();
             } else {
-                document.getElementById('regForm').classList.remove('hidden');
+                document.getElementById('regForm').classList.remove('hidden'); [cite: 46]
             }
         }
 
         function showConfirmPopup() {
-            const studentId = document.getElementById('studentId').value;
+            const studentId = document.getElementById('studentId').value; [cite: 47]
             const fullName = document.getElementById('fullName').value;
             const school = document.getElementById('school').value;
 
             if (studentId.length !== 8) {
-                alert('รหัสนักศึกษาต้องมี 8 หลักเท่านั้น');
+                alert('รหัสนักศึกษาต้องมี 8 หลักเท่านั้น'); [cite: 48]
                 return;
             }
             if (!fullName || !school) {
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน'); [cite: 49]
                 return;
             }
 
@@ -169,36 +217,34 @@
                 <p><strong>รหัสนักศึกษา:</strong> ${studentId}</p>
                 <p><strong>ชื่อ-นามสกุล:</strong> ${fullName}</p>
                 <p><strong>สำนักวิชา:</strong> ${school}</p>
-            `;
+            `; [cite: 50]
             document.getElementById('confirmDetails').innerHTML = details;
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
         function hideConfirmPopup() {
-            document.getElementById('modalOverlay').style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none'; [cite: 51]
         }
 
         async function confirmAndRegister() {
-            const studentId = document.getElementById('studentId').value;
+            const studentId = document.getElementById('studentId').value; [cite: 52]
             const fullName = document.getElementById('fullName').value;
             const school = document.getElementById('school').value;
 
             hideConfirmPopup();
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('loading').innerText = 'กำลังบันทึกข้อมูล...';
-            document.getElementById('loading').classList.remove('hidden');
-
+            document.getElementById('loading').classList.remove('hidden'); [cite: 53]
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'register', userId, studentId, fullName, school })
-            });
-
+            }); [cite: 54]
             alert('ลงทะเบียนสำเร็จ!');
             location.reload();
         }
 
         function handleCheckIn() {
-            const btn = document.getElementById('btnCheckin');
+            const btn = document.getElementById('btnCheckin'); [cite: 55]
             btn.disabled = true;
             btn.innerText = 'กำลังตรวจสอบพิกัด...';
 
@@ -206,34 +252,33 @@
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: 'checkin',
+                        action: 'checkin', [cite: 56]
                         userId: userId,
                         studentId: userData.studentId,
                         fullName: userData.fullName,
-                        lat: pos.coords.latitude,
+                        lat: pos.coords.latitude, [cite: 57]
                         lng: pos.coords.longitude
                     })
                 });
-                const result = await response.json();
+                const result = await response.json(); [cite: 58]
                 
                 if (result.status === 'success') {
-                    // ปรับแต่งให้แจ้งเตือนว่าสำเร็จ แล้วสลับไปหน้าประเมิน
                     alert(result.message);
                     document.getElementById('checkinArea').classList.add('hidden');
-                    document.getElementById('successArea').classList.remove('hidden');
+                    document.getElementById('successArea').classList.remove('hidden'); [cite: 59]
                 } else {
-                    alert(result.message);
+                    alert(result.message); [cite: 60]
                     btn.disabled = false;
                     btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
                 }
             }, (err) => {
-                alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง');
+                alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง'); [cite: 61]
                 btn.disabled = false;
                 btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
             }, { enableHighAccuracy: true });
         }
 
-        main();
+        main(); [cite: 62]
     </script>
 </body>
 </html>
