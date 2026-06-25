@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>ระบบเช็คอินกิจกรรม</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
@@ -19,7 +23,6 @@
         button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
         .info-box { background: #e9f7ef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 4px solid #00b900; }
         
-        /* Modal Styles */
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; text-align: left; }
         .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -28,19 +31,31 @@
         .btn-confirm { background: #00b900; flex: 2; }
         .btn-cancel { background: #999; flex: 1; }
         
-        #loading { font-size: 18px; color: #666; margin-top: 50px; }
-        .hidden { display: none; }
+        /* หน้าต่าง Loading แบบใหม่ */
+        #loading-container { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%;
+            border-left-color: #00b900; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 18px; color: #666; font-weight: bold; text-align: center; }
+        .loading-subtext { font-size: 13px; color: #999; margin-top: 5px; text-align: center; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="loading">กำลังเชื่อมต่อระบบ...</div>
+    <div id="loading-container">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-message">กำลังตรวจสอบข้อมูล...</div>
+        <div class="loading-subtext">(ระบบอาจใช้เวลา 3-5 วินาที ในการประมวลผลครั้งแรก)</div>
+    </div>
 
     <div id="mainApp" class="container hidden">
         <div id="regForm" class="hidden">
             <h2>ระบบเช็คอินกิจกรรม</h2>
             <h3>ศูนย์ส่งเสริมและพัฒนานักศึกษา</h3>
-            <h3>กรุณาลงทะเบียนเพื่อยืนยันตัวตน</h3>
+            <h3>กรุณาลงทะเบียน</h3>
             
             <span class="label">รหัสนักศึกษา (8 หลัก)</span>
             <input type="text" id="studentId" placeholder="ตัวอย่าง 69XXXXXX" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)">
@@ -87,16 +102,14 @@
                 <strong>รหัส:</strong> <span id="dispId"></span>
             </div>
             
-            <!-- ส่วนแสดงสถานะเวลาเปิด-ปิด -->
             <div id="timeStatusArea"></div>
-
             <button id="btnCheckin" onclick="handleCheckIn()">กดเพื่อเช็คอินเข้ากิจกรรม</button>
         </div>
 
         <div id="successArea" class="hidden" style="text-align: center;">
-            <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ กดตกลงเพื่อทำแบบประเมิน</h2>
+            <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ</h2>
             <div class="info-box" style="border-left-color: #008CBA; background-color: #e6f2ff; margin-bottom: 25px;">
-                คลิกทำแบบประเมินเพื่อรับคะแนนความดี<br>
+                กรุณาทำแบบประเมิน<br>
                 <a href="https://forms.gle/biY5zSiC6aCe3qK87" target="_blank" style="color: #0056b3; font-weight: bold; word-break: break-all; text-decoration: none;">https://forms.gle/biY5zSiC6aCe3qK87</a>
             </div>
             <button onclick="window.location.href='https://forms.gle/biY5zSiC6aCe3qK87'" style="background-color: #008CBA;">กดเพื่อทำแบบประเมิน</button>
@@ -106,8 +119,7 @@
     <div id="modalOverlay">
         <div class="modal-content">
             <div class="modal-header">ยืนยันข้อมูลการลงทะเบียน</div>
-            <div class="modal-body" id="confirmDetails">
-            </div>
+            <div class="modal-body" id="confirmDetails"></div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="hideConfirmPopup()">แก้ไข</button>
                 <button class="btn-confirm" onclick="confirmAndRegister()">ยืนยัน</button>
@@ -117,7 +129,6 @@
 
     <script>
         const LIFF_ID = '2008925313-hrsUUpmB';
-        // --- สำคัญมาก: เปลี่ยนเป็น URL Deploy ล่าสุดของคุณ หากมีการแก้ไข Apps Script ---
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec'; 
         
         let userId = '';
@@ -134,28 +145,57 @@
                 const profile = await liff.getProfile();
                 userId = profile.userId;
                 
-                // โหลดการตั้งค่าเวลาพร้อมกับเช็คสถานะนักศึกษา
-                await fetchConfig();
-                checkUserStatus();
+                await loadAppData();
             } catch (err) {
-                alert('LIFF Initialization failed');
+                showRetryButton('เกิดข้อผิดพลาดในการเชื่อมต่อ LINE');
             }
         }
 
-        // ดึงการตั้งค่าจาก Google Sheet
-        async function fetchConfig() {
+        async function loadAppData() {
             try {
-                const response = await fetch(SCRIPT_URL);
-                eventConfig = await response.json();
+                // ดึงข้อมูลทั้งสองเส้นพร้อมกัน
+                const fetchPromises = Promise.all([
+                    fetch(SCRIPT_URL),
+                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'checkStatus', userId: userId }) })
+                ]);
+
+                // ตั้งเวลาป้องกันแอปค้าง (12 วินาที)
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 12000));
+                
+                // ถ้าระบบตอบกลับช้ากว่า 12 วินาที จะตัดเข้า error ทันที
+                const [configResponse, userResponse] = await Promise.race([fetchPromises, timeoutPromise]);
+
+                eventConfig = await configResponse.json();
+                const userResult = await userResponse.json();
+
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+
+                if (userResult.registered) {
+                    userData = userResult.userData;
+                    document.getElementById('checkinArea').classList.remove('hidden');
+                    document.getElementById('dispName').innerText = userData.fullName;
+                    document.getElementById('dispId').innerText = userData.studentId;
+                    checkTimeAndLockUI();
+                } else {
+                    document.getElementById('regForm').classList.remove('hidden');
+                }
             } catch (err) {
-                console.error('Failed to load configuration');
+                showRetryButton('การเชื่อมต่อล่าช้ากว่าปกติ<br>กรุณาลองใหม่อีกครั้ง');
             }
         }
 
-        // อัปเดต UI เปิด-ปิด การเช็คอินตามเวลา
+        function showRetryButton(msg) {
+            document.getElementById('loading-message').innerHTML = `
+                <span style="color:#d9534f;">${msg}</span>
+                <br><button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; font-size:16px;">โหลดหน้าจอใหม่</button>
+            `;
+            document.querySelector('.spinner').style.display = 'none';
+            document.querySelector('.loading-subtext').style.display = 'none';
+        }
+
         function checkTimeAndLockUI() {
             if (!eventConfig) return;
-            
             const now = new Date();
             const btn = document.getElementById('btnCheckin');
             const timeStatus = document.getElementById('timeStatusArea');
@@ -164,40 +204,13 @@
             let end = eventConfig.endTime ? new Date(eventConfig.endTime) : null;
 
             if (start && now < start) {
-                btn.disabled = true;
-                btn.innerText = 'ยังไม่เปิดระบบ';
+                btn.disabled = true; btn.innerText = 'ยังไม่เปิดระบบ';
                 timeStatus.innerHTML = `<div class="warning-text" style="color:#856404; background:#FFF3CD; border-color:#856404;">ระบบจะเปิดให้เช็คอินเวลา: ${start.toLocaleString('th-TH')}</div>`;
             } else if (end && now > end) {
-                btn.disabled = true;
-                btn.innerText = 'ระบบปิดแล้ว';
+                btn.disabled = true; btn.innerText = 'ระบบปิดแล้ว';
                 timeStatus.innerHTML = `<div class="warning-text">หมดเวลาเช็คอินแล้ว (ปิดเมื่อ ${end.toLocaleString('th-TH')})</div>`;
             } else {
-                btn.disabled = false;
-                btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
-                timeStatus.innerHTML = ''; // เอาข้อความเตือนออก
-            }
-        }
-
-        async function checkUserStatus() {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'checkStatus', userId: userId })
-            });
-            const result = await response.json();
-            
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-
-            if (result.registered) {
-                userData = result.userData;
-                document.getElementById('checkinArea').classList.remove('hidden');
-                document.getElementById('dispName').innerText = userData.fullName;
-                document.getElementById('dispId').innerText = userData.studentId;
-                
-                // ตรวจสอบเวลาเพื่อล็อคปุ่มทันทีที่โหลดเสร็จ
-                checkTimeAndLockUI();
-            } else {
-                document.getElementById('regForm').classList.remove('hidden');
+                btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม'; timeStatus.innerHTML = '';
             }
         }
 
@@ -206,27 +219,14 @@
             const fullName = document.getElementById('fullName').value;
             const school = document.getElementById('school').value;
 
-            if (studentId.length !== 8) {
-                alert('รหัสนักศึกษาต้องมี 8 หลักเท่านั้น');
-                return;
-            }
-            if (!fullName || !school) {
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-                return;
-            }
+            if (studentId.length !== 8) { alert('รหัสนักศึกษาต้องมี 8 หลักเท่านั้น'); return; }
+            if (!fullName || !school) { alert('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
 
-            const details = `
-                <p><strong>รหัสนักศึกษา:</strong> ${studentId}</p>
-                <p><strong>ชื่อ-นามสกุล:</strong> ${fullName}</p>
-                <p><strong>สำนักวิชา:</strong> ${school}</p>
-            `;
-            document.getElementById('confirmDetails').innerHTML = details;
+            document.getElementById('confirmDetails').innerHTML = `<p><strong>รหัสนักศึกษา:</strong> ${studentId}</p><p><strong>ชื่อ-นามสกุล:</strong> ${fullName}</p><p><strong>สำนักวิชา:</strong> ${school}</p>`;
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
-        function hideConfirmPopup() {
-            document.getElementById('modalOverlay').style.display = 'none';
-        }
+        function hideConfirmPopup() { document.getElementById('modalOverlay').style.display = 'none'; }
 
         async function confirmAndRegister() {
             const studentId = document.getElementById('studentId').value;
@@ -235,34 +235,23 @@
 
             hideConfirmPopup();
             document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loading').innerText = 'กำลังบันทึกข้อมูล...';
-            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loading-container').classList.remove('hidden');
+            document.getElementById('loading-message').innerText = 'กำลังบันทึกข้อมูล...';
+            document.querySelector('.loading-subtext').innerText = '';
 
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'register', userId, studentId, fullName, school })
-            });
-
-            alert('ลงทะเบียนผูกบัญชี Line สำเร็จ! กรุณารอหน้าเช็คอิน');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId, studentId, fullName, school }) });
+            alert('ลงทะเบียนสำเร็จ!');
             location.reload();
         }
 
         function handleCheckIn() {
             const btn = document.getElementById('btnCheckin');
-            btn.disabled = true;
-            btn.innerText = 'กำลังตรวจสอบพิกัด...';
+            btn.disabled = true; btn.innerText = 'กำลังตรวจสอบพิกัด...';
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        action: 'checkin',
-                        userId: userId,
-                        studentId: userData.studentId,
-                        fullName: userData.fullName,
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude
-                    })
+                    body: JSON.stringify({ action: 'checkin', userId: userId, studentId: userData.studentId, fullName: userData.fullName, lat: pos.coords.latitude, lng: pos.coords.longitude })
                 });
                 const result = await response.json();
                 
@@ -272,13 +261,11 @@
                     document.getElementById('successArea').classList.remove('hidden');
                 } else {
                     alert(result.message);
-                    btn.disabled = false;
-                    btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
+                    btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
                 }
             }, (err) => {
                 alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง');
-                btn.disabled = false;
-                btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
+                btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
             }, { enableHighAccuracy: true });
         }
 
