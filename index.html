@@ -21,22 +21,22 @@
         button { width: 100%; padding: 15px; background-color: #00b900; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background-color: #009900; transform: translateY(-2px); }
         button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+        
+        /* ปุ่มสำหรับ Check-out */
+        .btn-checkout { background-color: #e67e22; }
+        .btn-checkout:hover { background-color: #d35400; }
+
         .info-box { background: #e9f7ef; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 4px solid #00b900; }
         
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; text-align: left; }
         .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-body p { margin: 10px 0; line-height: 1.6; }
         .modal-footer { margin-top: 25px; display: flex; gap: 10px; }
         .btn-confirm { background: #00b900; flex: 2; }
         .btn-cancel { background: #999; flex: 1; }
         
-        /* หน้าต่าง Loading แบบใหม่ */
         #loading-container { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%;
-            border-left-color: #00b900; animation: spin 1s linear infinite; margin-bottom: 15px;
-        }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: #00b900; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { font-size: 18px; color: #666; font-weight: bold; text-align: center; }
         .loading-subtext { font-size: 13px; color: #999; margin-top: 5px; text-align: center; }
@@ -55,14 +55,11 @@
         <div id="regForm" class="hidden">
             <h2>ระบบเช็คอินกิจกรรม</h2>
             <h3>ศูนย์ส่งเสริมและพัฒนานักศึกษา</h3>
-            <h3>กรุณาลงทะเบียนเพื่อยืนยันตัวตนก่อนเช็คอิน</h3>
-            
+            <h3>กรุณาลงทะเบียนเพื่อยืนยันตัวตน</h3>
             <span class="label">รหัสนักศึกษา (8 หลัก)</span>
             <input type="text" id="studentId" placeholder="ตัวอย่าง 69XXXXXX" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)">
-            
             <span class="label">ชื่อ-นามสกุล</span>
             <input type="text" id="fullName" placeholder="คำนำหน้า ชื่อ นามสกุล">
-            
             <span class="label">สำนักวิชา</span>
             <select id="school">
                 <option value="">เลือกสำนักวิชา</option>
@@ -86,30 +83,28 @@
                 <option value="วิทยาลัยนานาชาติ">วิทยาลัยนานาชาติ</option>
                 <option value="วิทยาลัยสัตวแพทยศาสตร์อัครราชกุมารี">วิทยาลัยสัตวแพทยศาสตร์อัครราชกุมารี</option>
             </select>
-
             <div class="warning-text">
                 กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนบันทึกข้อมูล สามารถบันทึกข้อมูลได้เพียง 1 ครั้งต่อ 1 ID Line เท่านั้น
             </div>
-            
             <button onclick="showConfirmPopup()">บันทึกข้อมูล</button>
         </div>
 
         <div id="checkinArea" class="hidden">
-            <h2>ระบบเช็คอินกิจกรรม</h2>
+            <h2 id="actionTitle">ระบบเช็คอินกิจกรรม</h2>
             <h3>ศูนย์ส่งเสริมและพัฒนานักศึกษา</h3>
-            <div class="info-box">
+            <div class="info-box" id="infoBoxColor">
                 <strong>ชื่อ:</strong> <span id="dispName"></span><br>
                 <strong>รหัส:</strong> <span id="dispId"></span>
             </div>
-            
             <div id="timeStatusArea"></div>
-            <button id="btnCheckin" onclick="handleCheckIn()">กดเพื่อเช็คอินเข้ากิจกรรม</button>
+            <button id="btnAction" onclick="handleAction()">กดเพื่อเช็คอินเข้ากิจกรรม</button>
         </div>
 
         <div id="successArea" class="hidden" style="text-align: center;">
-            <h2 style="color: #00b900; margin-bottom: 20px;">บันทึกการเข้าร่วมกิจกรรมสำเร็จ</h2>
+            <h2 style="color: #00b900; margin-bottom: 20px;">สิ้นสุดกิจกรรม</h2>
             <div class="info-box" style="border-left-color: #008CBA; background-color: #e6f2ff; margin-bottom: 25px;">
-                กรุณาทำแบบประเมิน<br>
+                บันทึกเวลาออกเรียบร้อยแล้ว<br>
+                กรุณาทำแบบประเมินเพื่อให้การเข้าร่วมกิจกรรมสมบูรณ์<br>
                 <a href="https://forms.gle/biY5zSiC6aCe3qK87" target="_blank" style="color: #0056b3; font-weight: bold; word-break: break-all; text-decoration: none;">https://forms.gle/biY5zSiC6aCe3qK87</a>
             </div>
             <button onclick="window.location.href='https://forms.gle/biY5zSiC6aCe3qK87'" style="background-color: #008CBA;">กดเพื่อทำแบบประเมิน</button>
@@ -129,22 +124,20 @@
 
     <script>
         const LIFF_ID = '2008925313-hrsUUpmB';
+        // --- เปลี่ยน URL ตรงนี้หลังจาก Deploy ใหม่ด้วยนะครับ ---
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVDz_HHLYEt5GulNKkmkKuD-f5q-piht1cQzzXHzRYg29YdJWXuOWeJm3Bzuxngl3KKQ/exec'; 
         
         let userId = '';
         let userData = null;
         let eventConfig = null;
+        let currentAction = 'checkin'; // ค่าเริ่มต้นคือ checkin
 
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                    return;
-                }
+                if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = await liff.getProfile();
                 userId = profile.userId;
-                
                 await loadAppData();
             } catch (err) {
                 showRetryButton('เกิดข้อผิดพลาดในการเชื่อมต่อ LINE');
@@ -153,16 +146,12 @@
 
         async function loadAppData() {
             try {
-                // ดึงข้อมูลทั้งสองเส้นพร้อมกัน
                 const fetchPromises = Promise.all([
                     fetch(SCRIPT_URL),
                     fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'checkStatus', userId: userId }) })
                 ]);
 
-                // ตั้งเวลาป้องกันแอปค้าง (12 วินาที)
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 12000));
-                
-                // ถ้าระบบตอบกลับช้ากว่า 12 วินาที จะตัดเข้า error ทันที
                 const [configResponse, userResponse] = await Promise.race([fetchPromises, timeoutPromise]);
 
                 eventConfig = await configResponse.json();
@@ -173,10 +162,28 @@
 
                 if (userResult.registered) {
                     userData = userResult.userData;
-                    document.getElementById('checkinArea').classList.remove('hidden');
-                    document.getElementById('dispName').innerText = userData.fullName;
-                    document.getElementById('dispId').innerText = userData.studentId;
-                    checkTimeAndLockUI();
+                    const eventRecord = userResult.eventRecord;
+
+                    // กำหนดสถานะผู้ใช้
+                    if (eventRecord.checkout) {
+                        // เช็คเอาท์ไปแล้ว -> แสดงหน้าขอบคุณ/แบบประเมินทันที
+                        document.getElementById('successArea').classList.remove('hidden');
+                    } else {
+                        // ยังไม่ทำรายการ หรือ เพิ่งเช็คอิน
+                        document.getElementById('checkinArea').classList.remove('hidden');
+                        document.getElementById('dispName').innerText = userData.fullName;
+                        document.getElementById('dispId').innerText = userData.studentId;
+
+                        if (eventRecord.checkin) {
+                            // เคยเช็คอินแล้ว -> เปลี่ยนโหมดเป็น เช็คเอาท์
+                            currentAction = 'checkout';
+                        } else {
+                            // ยังไม่เคยเช็คอิน
+                            currentAction = 'checkin';
+                        }
+                        
+                        updateUIByAction();
+                    }
                 } else {
                     document.getElementById('regForm').classList.remove('hidden');
                 }
@@ -186,31 +193,44 @@
         }
 
         function showRetryButton(msg) {
-            document.getElementById('loading-message').innerHTML = `
-                <span style="color:#d9534f;">${msg}</span>
-                <br><button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; font-size:16px;">โหลดหน้าจอใหม่</button>
-            `;
+            document.getElementById('loading-message').innerHTML = `<span style="color:#d9534f;">${msg}</span><br><button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; font-size:16px;">โหลดหน้าจอใหม่</button>`;
             document.querySelector('.spinner').style.display = 'none';
             document.querySelector('.loading-subtext').style.display = 'none';
         }
 
-        function checkTimeAndLockUI() {
-            if (!eventConfig) return;
-            const now = new Date();
-            const btn = document.getElementById('btnCheckin');
+        // จัดการหน้าจอตามสถานะ (เช็คอิน หรือ เช็คเอาท์)
+        function updateUIByAction() {
+            const btn = document.getElementById('btnAction');
             const timeStatus = document.getElementById('timeStatusArea');
+            const title = document.getElementById('actionTitle');
+            const infoBox = document.getElementById('infoBoxColor');
+            const now = new Date();
+            let start, end, actionText;
 
-            let start = eventConfig.startTime ? new Date(eventConfig.startTime) : null;
-            let end = eventConfig.endTime ? new Date(eventConfig.endTime) : null;
+            if (currentAction === 'checkin') {
+                title.innerText = "ระบบเช็คอินกิจกรรม";
+                btn.className = "btn-confirm";
+                start = eventConfig.checkinStart ? new Date(eventConfig.checkinStart) : null;
+                end = eventConfig.checkinEnd ? new Date(eventConfig.checkinEnd) : null;
+                actionText = "เช็คอิน";
+            } else {
+                title.innerText = "ระบบเช็คเอาท์กิจกรรม";
+                btn.className = "btn-checkout"; // เปลี่ยนสีปุ่มเป็นสีส้ม
+                infoBox.style.borderLeftColor = "#e67e22";
+                infoBox.style.backgroundColor = "#fdf2e9";
+                start = eventConfig.checkoutStart ? new Date(eventConfig.checkoutStart) : null;
+                end = eventConfig.checkoutEnd ? new Date(eventConfig.checkoutEnd) : null;
+                actionText = "เช็คเอาท์";
+            }
 
             if (start && now < start) {
-                btn.disabled = true; btn.innerText = 'ยังไม่เปิดระบบ';
-                timeStatus.innerHTML = `<div class="warning-text" style="color:#856404; background:#FFF3CD; border-color:#856404;">ระบบจะเปิดให้เช็คอินเวลา: ${start.toLocaleString('th-TH')}</div>`;
+                btn.disabled = true; btn.innerText = `ยังไม่ถึงเวลา${actionText}`;
+                timeStatus.innerHTML = `<div class="warning-text" style="color:#856404; background:#FFF3CD; border-color:#856404;">ระบบเปิดให้${actionText}เวลา: ${start.toLocaleString('th-TH')}</div>`;
             } else if (end && now > end) {
-                btn.disabled = true; btn.innerText = 'ระบบปิดแล้ว';
-                timeStatus.innerHTML = `<div class="warning-text">หมดเวลาเช็คอินแล้ว (ปิดเมื่อ ${end.toLocaleString('th-TH')})</div>`;
+                btn.disabled = true; btn.innerText = `ระบบปิด${actionText}แล้ว`;
+                timeStatus.innerHTML = `<div class="warning-text">หมดเวลา${actionText}แล้ว (ปิดเมื่อ ${end.toLocaleString('th-TH')})</div>`;
             } else {
-                btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม'; timeStatus.innerHTML = '';
+                btn.disabled = false; btn.innerText = `กดเพื่อ${actionText}`; timeStatus.innerHTML = '';
             }
         }
 
@@ -240,32 +260,39 @@
             document.querySelector('.loading-subtext').innerText = '';
 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId, studentId, fullName, school }) });
-            alert('ลงทะเบียนสำเร็จ!กดตกลงเพื่อไปยังหน้าเช็คอิน');
+            alert('ลงทะเบียนสำเร็จ!');
             location.reload();
         }
 
-        function handleCheckIn() {
-            const btn = document.getElementById('btnCheckin');
+        // ใช้ฟังก์ชันเดียวกันส่งข้อมูล แต่เปลี่ยนค่า action ตามสถานะผู้ใช้
+        function handleAction() {
+            const btn = document.getElementById('btnAction');
             btn.disabled = true; btn.innerText = 'กำลังตรวจสอบพิกัด...';
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'checkin', userId: userId, studentId: userData.studentId, fullName: userData.fullName, lat: pos.coords.latitude, lng: pos.coords.longitude })
+                    body: JSON.stringify({ 
+                        action: currentAction, // ส่งค่าเป็น checkin หรือ checkout 
+                        userId: userId, 
+                        studentId: userData.studentId, 
+                        fullName: userData.fullName, 
+                        lat: pos.coords.latitude, 
+                        lng: pos.coords.longitude 
+                    })
                 });
                 const result = await response.json();
                 
                 if (result.status === 'success') {
                     alert(result.message);
-                    document.getElementById('checkinArea').classList.add('hidden');
-                    document.getElementById('successArea').classList.remove('hidden');
+                    location.reload(); // รีโหลดหน้าจอเพื่อให้ดึงสถานะใหม่ล่าสุด
                 } else {
                     alert(result.message);
-                    btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
+                    updateUIByAction(); // คืนค่าปุ่มเดิม
                 }
             }, (err) => {
                 alert('กรุณาเปิด GPS และอนุญาตให้เข้าถึงตำแหน่ง');
-                btn.disabled = false; btn.innerText = 'กดเพื่อเช็คอินเข้ากิจกรรม';
+                updateUIByAction(); // คืนค่าปุ่มเดิม
             }, { enableHighAccuracy: true });
         }
 
