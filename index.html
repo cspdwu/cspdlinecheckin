@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     
     <title>ระบบเช็คอินกิจกรรม</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -123,8 +121,8 @@
     <script>
         const LIFF_ID = '2008925313-hrsUUpmB';
         
-        // ⚠️ สำคัญมาก: เปลี่ยนลิงก์ด้านล่างนี้ให้เป็น URL อันใหม่ล่าสุดที่ได้จากการ Deploy 
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTzIhwHxeGUw2VQyINjdvAoubzf-IESsWPRU8QQkkE6pcedHnrzR8dTwZIokGTgD_9Xg/exec'; 
+        // ⚠️ สำคัญมาก: เปลี่ยนลิงก์ด้านล่างนี้ให้เป็น URL ของการ Deploy ครั้งใหม่ (ที่ลงท้ายด้วย /exec เสมอ)
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOaBJY787pacfIb6jfaWBz1UyF9uvGY3wuM8EzFJ4I0ui2qclfLaIxsYmSa8_rVqBWQw/exec'; 
         
         let userId = '';
         let userData = null;
@@ -139,63 +137,54 @@
                 userId = profile.userId;
                 await loadAppData();
             } catch (err) {
-                showErrorScreen('เกิดข้อผิดพลาดในการเชื่อมต่อ LINE (' + err.message + ')');
+                showErrorScreen('เกิดข้อผิดพลาดในการเชื่อมต่อกับแอป LINE');
             }
         }
 
         async function loadAppData() {
             try {
-                const fetchPromises = Promise.all([
-                    fetch(SCRIPT_URL, { redirect: "follow" }),
-                    fetch(SCRIPT_URL, { method: 'POST', redirect: "follow", body: JSON.stringify({ action: 'checkStatus', userId: userId }) })
-                ]);
+                // รวบยอดคำสั่งดึงข้อมูลเป็น Request เดียว (แก้ปัญหา Google Block)
+                const fetchPromise = fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'initApp', userId: userId }) 
+                });
 
-                // เพิ่มเวลาจำกัดให้เป็น 15 วินาทีเผื่อเน็ตช้า
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000));
-                const [configResponse, userResponse] = await Promise.race([fetchPromises, timeoutPromise]);
+                const response = await Promise.race([fetchPromise, timeoutPromise]);
+                const result = await response.json();
 
-                const configText = await configResponse.text();
-                const userText = await userResponse.text();
+                eventConfig = result.config;
+                
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
 
-                try {
-                    eventConfig = JSON.parse(configText);
-                    const userResult = JSON.parse(userText);
-                    
-                    document.getElementById('loading-container').classList.add('hidden');
-                    document.getElementById('mainApp').classList.remove('hidden');
+                if (result.registered) {
+                    userData = result.userData;
+                    const eventRecord = result.eventRecord;
 
-                    if (userResult.registered) {
-                        userData = userResult.userData;
-                        const eventRecord = userResult.eventRecord;
-
-                        if (eventRecord.checkout) {
-                            document.getElementById('successArea').classList.remove('hidden');
-                        } else {
-                            document.getElementById('checkinArea').classList.remove('hidden');
-                            document.getElementById('dispName').innerText = userData.fullName;
-                            document.getElementById('dispId').innerText = userData.studentId;
-
-                            if (eventRecord.checkin) {
-                                currentAction = 'checkout';
-                            } else {
-                                currentAction = 'checkin';
-                            }
-                            updateUIByAction();
-                        }
+                    if (eventRecord.checkout) {
+                        document.getElementById('successArea').classList.remove('hidden');
                     } else {
-                        document.getElementById('regForm').classList.remove('hidden');
-                    }
+                        document.getElementById('checkinArea').classList.remove('hidden');
+                        document.getElementById('dispName').innerText = userData.fullName;
+                        document.getElementById('dispId').innerText = userData.studentId;
 
-                } catch (parseError) {
-                    console.error(configText); 
-                    showErrorScreen('ลิงก์ URL ฝั่ง Apps Script ไม่ถูกต้อง หรือตั้งค่าสิทธิ์ Deploy ผิดพลาด');
+                        if (eventRecord.checkin) {
+                            currentAction = 'checkout';
+                        } else {
+                            currentAction = 'checkin';
+                        }
+                        updateUIByAction();
+                    }
+                } else {
+                    document.getElementById('regForm').classList.remove('hidden');
                 }
 
             } catch (err) {
                 if (err.message === 'TIMEOUT') {
-                    showErrorScreen('การเชื่อมต่อล่าช้ากว่าปกติ<br>เซิร์ฟเวอร์อาจกำลังรีบูต');
+                    showErrorScreen('การเชื่อมต่อล่าช้ากว่าปกติ<br>เซิร์ฟเวอร์อาจกำลังโหลดข้อมูล');
                 } else {
-                    showErrorScreen('ระบบเครือข่ายมีปัญหา กรุณาลองใหม่');
+                    showErrorScreen('ระบบเครือข่ายถูกปิดกั้น <br>โปรดตรวจสอบ URL ของ Script หรือ สิทธิ์การแชร์ Anyone');
                 }
             }
         }
@@ -266,7 +255,7 @@
             document.getElementById('loading-message').innerText = 'กำลังบันทึกข้อมูล...';
             document.getElementById('loading-subtext').innerText = '';
 
-            await fetch(SCRIPT_URL, { method: 'POST', redirect: "follow", body: JSON.stringify({ action: 'register', userId, studentId, fullName, school }) });
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId, studentId, fullName, school }) });
             alert('ลงทะเบียนสำเร็จ!');
             location.reload();
         }
@@ -278,7 +267,6 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    redirect: "follow",
                     body: JSON.stringify({ action: currentAction, userId: userId, studentId: userData.studentId, fullName: userData.fullName, lat: pos.coords.latitude, lng: pos.coords.longitude })
                 });
                 const result = await response.json();
